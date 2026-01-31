@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Photo & Video Share App</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-primary: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            --bg-secondary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --bg-card: rgba(0, 210, 255, 0.05);
+            --text-primary: white;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border-color: rgba(0, 210, 255, 0.2);
+            --accent-gradient: linear-gradient(90deg, #00d2ff 0%, #3a47d5 50%, #ff00ff 100%);
+            --btn-gradient: linear-gradient(135deg, #00d2ff 0%, #3a47d5 100%);
+        }
+
+        body.light-mode {
+            --bg-primary: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
+            --bg-secondary: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            --bg-card: rgba(33, 150, 243, 0.05);
+            --text-primary: #1a1a1a;
+            --text-secondary: rgba(0, 0, 0, 0.8);
+            --text-muted: rgba(0, 0, 0, 0.5);
+            --border-color: rgba(33, 150, 243, 0.3);
+            --accent-gradient: linear-gradient(90deg, #2196f3 0%, #1976d2 50%, #9c27b0 100%);
+            --btn-gradient: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            padding: 10px;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .event-banner, .trending-banner {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+            overflow: hidden;
+            position: relative;
+            height: 70px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .trending-banner {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .banner-title {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            opacity: 0.95;
+        }
+
+        .event-slider, .trending-slider {
+            display: flex;
+            animation: slide 45s linear infinite;
+            position: absolute;
+            top: 32px;
+            white-space: nowrap;
+        }
+
+        .event-item, .trending-item {
+            padding: 0 50px;
+            font-size: 16px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+        }
+
+        .trending-thumbnail {
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 210, 255, 0.2);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .header {
+            background: var(--btn-gradient);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .language-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .lang-btn:active {
+            transform: scale(0.95);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #00d2ff, #ff00ff);
+            border-color: white;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 8px;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--accent-gradient);
+            transform: translateX(-50%);
+            transition: width 0.3s;
+        }
+
+        .tab.active {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .tab.active::after {
+            width: 70%;
+        }
+
+        .content {
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .upload-section {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.08);
+        }
+
+        .upload-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #00d2ff;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        input[type="datetime-local"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        input[type="text"]:focus,
+        input[type="datetime-local"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #00d2ff;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.25);
+        }
+
+        .btn {
+            background: var(--btn-gradient);
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.25);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(0, 210, 255, 0.3);
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .photo-card, .video-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s;
+            border: 1px solid var(--border-color);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .video-card video {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: black;
+        }
+
+        .photo-info {
+            padding: 12px 14px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 0 10px;
+        }
+
+        .upload-date-only {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .photo-caption {
+            color: var(--text-secondary);
+            margin: 10px 0;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .interaction-bar {
+            display: flex;
+            gap: 15px;
+            padding: 10px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin: 10px 0;
+        }
+
+        .interaction-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .interaction-btn:active {
+            background: var(--bg-card);
+            color: #00d2ff;
+        }
+
+        .reaction-picker {
+            display: none;
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 8px;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 8px;
+        }
+
+        .reaction-picker.show {
+            display: flex;
+        }
+
+        .reaction-emoji {
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .reaction-emoji:active {
+            transform: scale(1.2);
+            background: var(--bg-card);
+        }
+
+        .reactions-display {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+
+        .reaction-count {
+            background: var(--bg-card);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+        }
+
+        .comments-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .comment {
+            background: var(--bg-card);
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #00d2ff;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .comment-text {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .comment-input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .comment-btn {
+            padding: 8px 18px;
+            background: var(--btn-gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .comment-btn:active {
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: var(--bg-card);
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00d2ff;
+            text-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-size: 12px;
+        }
+
+        .event-card {
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .event-title {
+            font-size: 17px;
+            font-weight: bold;
+            color: #00d2ff;
+            margin-bottom: 8px;
+        }
+
+        .event-time {
+            color: #ff00ff;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .event-description {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
+        .delete-btn {
+            background: #ff0055;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:active {
+            transform: scale(0.95);
+        }
+
+        .event-warning {
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.15), rgba(255, 85, 0, 0.15));
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ff9800;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .event-warning .warning-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0 10px 4px;
+        }
+
+        .post-delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-delete-btn:active {
+            background: rgba(255, 0, 85, 0.15);
+            color: #ff0055;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            max-width: 100%;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(0,210,255,0.2);
+            animation: modalIn 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+
+        .modal-close:active {
+            background: rgba(255,0,85,0.6);
+        }
+
+        .modal-box img {
+            width: 100%;
+            border-radius: 16px 16px 0 0;
+            display: block;
+        }
+
+        .modal-box video {
+            width: 100%;
+            border-radius: 16px 16px 0 0;
+            display: block;
+            background: #000;
+        }
+
+        .modal-body {
+            padding: 16px 18px 20px;
+            color: var(--text-primary);
+        }
+
+        .footer {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .footer a {
+            color: #00d2ff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .footer-links a {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--btn-gradient);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+            z-index: 2000;
+            display: none;
+            animation: slideDown 0.4s ease;
+            font-size: 14px;
+            max-width: 90%;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-80px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        ::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00d2ff;
+        }
+
+        /* Additional Mobile Optimizations */
+        @media (max-width: 400px) {
+            .header h1 { font-size: 20px; }
+            .tab { font-size: 12px; padding: 13px 6px; }
+            .photo-card img, .video-card video { height: 200px; }
+            .stat-number { font-size: 24px; }
+        }
+
+        /* Touch feedback */
+        button, .tab, .lang-btn, input[type="file"] {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Fix for file inputs on mobile */
+        input[type="file"] {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <span id="themeIcon">🌙</span>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="event-banner">
+        <div class="banner-title" id="bannerTitle">✨ UPCOMING EVENTS ✨</div>
+        <div class="event-slider" id="eventSlider">
+            <div class="event-item">🎉 No upcoming events</div>
+        </div>
+    </div>
+
+    <div class="trending-banner">
+        <div class="banner-title" id="trendingBannerTitle">🔥 TRENDING & RECENT POSTS 🔥</div>
+        <div class="trending-slider" id="trendingSlider">
+            <div class="trending-item">📱 No posts yet</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="language-toggle">
+                <button class="lang-btn active" id="langEnBtn" onclick="changeLanguage('en')">English</button>
+                <button class="lang-btn" id="langBnBtn" onclick="changeLanguage('bn')">বাংলা</button>
+            </div>
+            <h1 id="headerTitle">🖼️ Photo & Video Share App</h1>
+            <p id="headerSubtitle">Share your moments and connect with others in real-time</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('upload')">
+                <span id="tabUpload">📤 Upload</span>
+            </button>
+            <button class="tab" onclick="showTab('gallery')">
+                <span id="tabGallery">📊 Gallery</span>
+            </button>
+            <button class="tab" onclick="showTab('posts')">
+                <span id="tabPosts">📱 Posts</span>
+            </button>
+            <button class="tab" onclick="showTab('events')">
+                <span id="tabEvents">📅 Events</span>
+            </button>
+        </div>
+
+        <div class="content">
+            <!-- Upload Tab -->
+            <div id="upload" class="tab-content active">
+                <div class="upload-section">
+                    <h2 id="uploadPhotoTitle">📸 Upload New Photo</h2>
+                    
+                    <div class="form-group">
+                        <label id="labelSelectPhoto">Select Photo</label>
+                        <input type="file" id="photoFile" accept="image/*" capture="environment">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelPhotoCaption">Caption (Optional)</label>
+                        <textarea id="photoCaption" rows="3" placeholder="Write something about this photo..."></textarea>
+                    </div>
+
+                    <button class="btn" onclick="uploadPhoto()" id="btnUploadPhoto">📤 Upload Photo</button>
+                </div>
+
+                <div class="upload-section">
+                    <h2 id="uploadVideoTitle">🎬 Upload New Video</h2>
+                    
+                    <div class="form-group">
+                        <label id="labelSelectVideo">Select Video</label>
+                        <input type="file" id="videoFile" accept="video/*" capture="environment">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelVideoCaption">Caption (Optional)</label>
+                        <textarea id="videoCaption" rows="3" placeholder="Write something about this video..."></textarea>
+                    </div>
+
+                    <button class="btn" onclick="uploadVideo()" id="btnUploadVideo">📤 Upload Video</button>
+                </div>
+            </div>
+
+            <!-- Gallery Tab -->
+            <div id="gallery" class="tab-content">
+                <h2 style="margin-bottom: 15px;" id="galleryTitle">📊 Gallery Statistics</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalPhotos">0</div>
+                        <div class="stat-label" id="labelTotalPhotos">Total Photos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalVideos">0</div>
+                        <div class="stat-label" id="labelTotalVideos">Total Videos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalLikes">0</div>
+                        <div class="stat-label" id="labelTotalLikes">Total Likes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalComments">0</div>
+                        <div class="stat-label" id="labelTotalComments">Total Comments</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posts Tab -->
+            <div id="posts" class="tab-content">
+                <h2 style="margin-bottom: 15px;" id="postsTitle">📱 All Posts (Photos & Videos)</h2>
+                <div class="photo-grid" id="postsGallery"></div>
+            </div>
+
+            <!-- Events Tab -->
+            <div id="events" class="tab-content">
+                <div class="upload-section">
+                    <h2 id="addEventTitle">🎊 Add New Event</h2>
+
+                    <div class="event-warning" id="eventWarning">
+                        <span class="warning-icon">⚠️</span>
+                        <span id="eventWarningText">Warning: You must provide both date AND time for the event.</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label id="labelEventTitle">Event Title</label>
+                        <input type="text" id="eventTitle" placeholder="e.g., Birthday Party">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelEventTime">Event Date & Time</label>
+                        <input type="datetime-local" id="eventTime">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelEventDescription">Event Description (Optional)</label>
+                        <textarea id="eventDescription" rows="3" placeholder="Tell us about the event..."></textarea>
+                    </div>
+
+                    <button class="btn" onclick="addEvent()" id="btnAddEvent">➕ Add Event</button>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h2 style="margin-bottom: 15px;" id="allEventsTitle">📋 All Events</h2>
+                    <div id="eventsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span id="footerPoweredBy">Powered by</span> <a href="https://www.facebook.com/profile.php?id=61550293801682" target="_blank" rel="noopener noreferrer">MD Imtiaz Hossain Somrat</a>
+            <div class="footer-links">
+                <a href="https://www.facebook.com/profile.php?id=61550293801682" target="_blank" rel="noopener noreferrer">
+                    📘 Facebook
+                </a>
+                <a href="https://wa.me/+8801618836609" target="_blank" rel="noopener noreferrer">
+                    📱 WhatsApp: +8801618836609
+                </a>
+                <a href="https://maps.app.goo.gl/qyGRBXZMCi6Cx5jv8" target="_blank" rel="noopener noreferrer">
+                    📍 Our Location
+                </a>
+            </div>
+            <div style="margin-top: 10px;">© 2026 <span id="footerAppName">Photo & Video Share App</span></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modalMedia"></div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkV5DJpMwedW1ZbPYil4NBZL1GP_4BMz8",
+            authDomain: "photo-share-app-c65fd.firebaseapp.com",
+            databaseURL: "https://photo-share-app-c65fd-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "photo-share-app-c65fd",
+            storageBucket: "photo-share-app-c65fd.firebasestorage.app",
+            messagingSenderId: "585105127605",
+            appId: "1:585105127605:web:cc948af7e01cef8c39e6fc"
+        };
+
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            console.log('✅ Firebase initialized');
+        } catch (error) {
+            console.error('Firebase error:', error);
+            db = null;
+        }
+
+        let currentLanguage = localStorage.getItem('language') || 'en';
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        let photos = [];
+        let videos = [];
+        let events = [];
+        const reactionEmojis = ['❤️', '😂', '😮', '😢', '👏', '🔥'];
+
+        const translations = {
+            en: {
+                bannerTitle: '✨ UPCOMING EVENTS ✨',
+                trendingBannerTitle: '🔥 TRENDING & RECENT POSTS 🔥',
+                headerTitle: '🖼️ Photo & Video Share App',
+                headerSubtitle: 'Share your moments and connect with others in real-time',
+                tabUpload: '📤 Upload',
+                tabGallery: '📊 Gallery',
+                tabPosts: '📱 Posts',
+                tabEvents: '📅 Events',
+                uploadPhotoTitle: '📸 Upload New Photo',
+                labelSelectPhoto: 'Select Photo',
+                labelPhotoCaption: 'Caption (Optional)',
+                btnUploadPhoto: '📤 Upload Photo',
+                uploadVideoTitle: '🎬 Upload New Video',
+                labelSelectVideo: 'Select Video',
+                labelVideoCaption: 'Caption (Optional)',
+                btnUploadVideo: '📤 Upload Video',
+                galleryTitle: '📊 Gallery Statistics',
+                labelTotalPhotos: 'Total Photos',
+                labelTotalVideos: 'Total Videos',
+                labelTotalLikes: 'Total Likes',
+                labelTotalComments: 'Total Comments',
+                postsTitle: '📱 All Posts (Photos & Videos)',
+                addEventTitle: '🎊 Add New Event',
+                labelEventTitle: 'Event Title',
+                labelEventTime: 'Event Date & Time',
+                labelEventDescription: 'Event Description (Optional)',
+                btnAddEvent: '➕ Add Event',
+                allEventsTitle: '📋 All Events',
+                footerPoweredBy: 'Powered by',
+                footerAppName: 'Photo & Video Share App',
+                pleaseSelectPhoto: '⚠️ Please select a photo!',
+                photoUploaded: '✅ Photo uploaded!',
+                pleaseSelectVideo: '⚠️ Please select a video!',
+                videoUploaded: '✅ Video uploaded!',
+                enterNameAndComment: '⚠️ Please enter name and comment!',
+                enterEventDetails: '⚠️ Please enter event title and date & time!',
+                eventAdded: '✅ Event added successfully!',
+                confirmDeleteEvent: 'Delete this event?',
+                eventDeleted: '✅ Event deleted!',
+                comments: 'Comments',
+                yourName: 'Your name',
+                writeComment: 'Write a comment...',
+                send: 'Send',
+                added: 'Added',
+                delete: 'Delete',
+                like: 'Like',
+                react: 'React',
+                noPostsYet: 'No posts yet!',
+                beFirstToPost: 'Be the first to share!',
+                noEventsYet: 'No events yet!',
+                beFirstToAddEvent: 'Add your first event!',
+                noUpcomingEvents: '🎉 No upcoming events',
+                eventWarningText: '⚠️ Warning: You must provide both date AND time for the event.',
+                deletePost: 'Delete',
+                confirmDeletePost: 'Delete this post?',
+                postDeleted: '✅ Post deleted!',
+                expandPost: 'View Full'
+            },
+            bn: {
+                bannerTitle: '✨ আসন্ন ইভেন্ট ✨',
+                trendingBannerTitle: '🔥 জনপ্রিয় ও সাম্প্রতিক পোস্ট 🔥',
+                headerTitle: '🖼️ ফটো ও ভিডিও শেয়ার অ্যাপ',
+                headerSubtitle: 'আপনার মুহূর্ত শেয়ার করুন এবং রিয়েল-টাইমে অন্যদের সাথে সংযুক্ত হন',
+                tabUpload: '📤 আপলোড',
+                tabGallery: '📊 গ্যালারি',
+                tabPosts: '📱 পোস্ট',
+                tabEvents: '📅 ইভেন্ট',
+                uploadPhotoTitle: '📸 নতুন ফটো আপলোড করুন',
+                labelSelectPhoto: 'ফটো নির্বাচন করুন',
+                labelPhotoCaption: 'ক্যাপশন (ঐচ্ছিক)',
+                btnUploadPhoto: '📤 ফটো আপলোড করুন',
+                uploadVideoTitle: '🎬 নতুন ভিডিও আপলোড করুন',
+                labelSelectVideo: 'ভিডিও নির্বাচন করুন',
+                labelVideoCaption: 'ক্যাপশন (ঐচ্ছিক)',
+                btnUploadVideo: '📤 ভিডিও আপলোড করুন',
+                galleryTitle: '📊 গ্যালারি পরিসংখ্যান',
+                labelTotalPhotos: 'মোট ফটো',
+                labelTotalVideos: 'মোট ভিডিও',
+                labelTotalLikes: 'মোট লাইক',
+                labelTotalComments: 'মোট মন্তব্য',
+                postsTitle: '📱 সব পোস্ট (ফটো ও ভিডিও)',
+                addEventTitle: '🎊 নতুন ইভেন্ট যোগ করুন',
+                labelEventTitle: 'ইভেন্টের শিরোনাম',
+                labelEventTime: 'ইভেন্টের তারিখ ও সময়',
+                labelEventDescription: 'ইভেন্টের বিবরণ (ঐচ্ছিক)',
+                btnAddEvent: '➕ ইভেন্ট যোগ করুন',
+                allEventsTitle: '📋 সব ইভেন্ট',
+                footerPoweredBy: 'পরিচালনায়',
+                footerAppName: 'ফটো ও ভিডিও শেয়ার অ্যাপ',
+                pleaseSelectPhoto: '⚠️ একটি ফটো নির্বাচন করুন!',
+                photoUploaded: '✅ ফটো আপলোড হয়েছে!',
+                pleaseSelectVideo: '⚠️ একটি ভিডিও নির্বাচন করুন!',
+                videoUploaded: '✅ ভিডিও আপলোড হয়েছে!',
+                enterNameAndComment: '⚠️ নাম এবং মন্তব্য লিখুন!',
+                enterEventDetails: '⚠️ ইভেন্টের শিরোনাম এবং তারিখ ও সময় লিখুন!',
+                eventAdded: '✅ ইভেন্ট সফলভাবে যোগ করা হয়েছে!',
+                confirmDeleteEvent: 'এই ইভেন্টটি মুছবেন?',
+                eventDeleted: '✅ ইভেন্ট মুছে ফেলা হয়েছে!',
+                comments: 'মন্তব্য',
+                yourName: 'আপনার নাম',
+                writeComment: 'মন্তব্য লিখুন...',
+                send: 'পাঠান',
+                added: 'যোগ করা হয়েছে',
+                delete: 'মুছুন',
+                like: 'লাইক',
+                react: 'রিয়্যাক্ট',
+                noPostsYet: 'এখনও কোনো পোস্ট নেই!',
+                beFirstToPost: 'প্রথম পোস্ট করুন!',
+                noEventsYet: 'এখনও কোনো ইভেন্ট নেই!',
+                beFirstToAddEvent: 'প্রথম ইভেন্ট যোগ করুন!',
+                noUpcomingEvents: '🎉 কোনো আসন্ন ইভেন্ট নেই',
+                eventWarningText: '⚠️ সতর্কবার্তা: ইভেন্টের তারিখের সাথে সময় অবশ্যই দিবেন।',
+                deletePost: 'মুছুন',
+                confirmDeletePost: 'এই পোস্টটি মুছবেন?',
+                postDeleted: '✅ পোস্ট মুছে ফেলা হয়েছে!',
+                expandPost: 'বড করে দেখুন'
+            }
+        };
+
+        function t(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            
+            document.getElementById('langEnBtn').classList.toggle('active', lang === 'en');
+            document.getElementById('langBnBtn').classList.toggle('active', lang === 'bn');
+            
+            Object.keys(translations[lang]).forEach(key => {
+                const el = document.getElementById(key);
+                if (el) el.textContent = translations[lang][key];
+            });
+
+            document.getElementById('eventWarningText').textContent = translations[lang].eventWarningText;
+            
+            displayPosts();
+            displayEvents();
+            initEventSlider();
+            initTrendingSlider();
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.classList.toggle('light-mode');
+            document.getElementById('themeIcon').textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        if (currentTheme === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('themeIcon').textContent = '☀️';
+        }
+
+        function showNotification(msg) {
+            const n = document.getElementById('notification');
+            n.textContent = msg;
+            n.classList.add('show');
+            setTimeout(() => n.classList.remove('show'), 3000);
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            if (tab === 'posts') displayPosts();
+            if (tab === 'events') displayEvents();
+            updateStats();
+        }
+
+        function uploadPhoto() {
+            const file = document.getElementById('photoFile');
+            const caption = document.getElementById('photoCaption').value.trim();
+            if (!file.files[0]) return showNotification(t('pleaseSelectPhoto'));
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const photo = {
+                    id: Date.now(),
+                    type: 'photo',
+                    image: e.target.result,
+                    caption,
+                    comments: [],
+                    likes: 0,
+                    reactions: {},
+                    uploadDate: new Date().toLocaleString()
+                };
+
+                if (db) {
+                    db.ref('photos/' + photo.id).set(photo).then(() => {
+                        showNotification(t('photoUploaded'));
+                        file.value = '';
+                        document.getElementById('photoCaption').value = '';
+                        initTrendingSlider();
+                    }).catch(err => console.error(err));
+                } else {
+                    photos.push(photo);
+                    localStorage.setItem('photos', JSON.stringify(photos));
+                    showNotification(t('photoUploaded'));
+                    updateStats();
+                    initTrendingSlider();
+                    file.value = '';
+                    document.getElementById('photoCaption').value = '';
+                }
+            };
+            reader.readAsDataURL(file.files[0]);
+        }
+
+        function uploadVideo() {
+            const file = document.getElementById('videoFile');
+            const caption = document.getElementById('videoCaption').value.trim();
+            if (!file.files[0]) return showNotification(t('pleaseSelectVideo'));
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const video = {
+                    id: Date.now(),
+                    type: 'video',
+                    video: e.target.result,
+                    caption,
+                    comments: [],
+                    likes: 0,
+                    reactions: {},
+                    uploadDate: new Date().toLocaleString()
+                };
+
+                if (db) {
+                    db.ref('videos/' + video.id).set(video).then(() => {
+                        showNotification(t('videoUploaded'));
+                        file.value = '';
+                        document.getElementById('videoCaption').value = '';
+                        initTrendingSlider();
+                    }).catch(err => console.error(err));
+                } else {
+                    videos.push(video);
+                    localStorage.setItem('videos', JSON.stringify(videos));
+                    showNotification(t('videoUploaded'));
+                    updateStats();
+                    initTrendingSlider();
+                    file.value = '';
+                    document.getElementById('videoCaption').value = '';
+                }
+            };
+            reader.readAsDataURL(file.files[0]);
+        }
+
+        function toggleLike(id, type) {
+            const item = type === 'video' ? videos.find(v => v.id === id) : photos.find(p => p.id === id);
+            if (!item) return;
+            item.likes = (item.likes || 0) + 1;
+            if (db) {
+                db.ref(`${type}s/${id}`).set(item);
+            } else {
+                localStorage.setItem(type === 'video' ? 'videos' : 'photos', JSON.stringify(type === 'video' ? videos : photos));
+                displayPosts();
+                updateStats();
+                initTrendingSlider();
+            }
+        }
+
+        function showReactionPicker(id) {
+            const picker = document.getElementById('reactionPicker-' + id);
+            if (picker) picker.classList.toggle('show');
+        }
+
+        function addReaction(id, type, emoji) {
+            const item = type === 'video' ? videos.find(v => v.id === id) : photos.find(p => p.id === id);
+            if (!item) return;
+            if (!item.reactions) item.reactions = {};
+            item.reactions[emoji] = (item.reactions[emoji] || 0) + 1;
+            if (db) {
+                db.ref(`${type}s/${id}`).set(item);
+            } else {
+                localStorage.setItem(type === 'video' ? 'videos' : 'photos', JSON.stringify(type === 'video' ? videos : photos));
+                displayPosts();
+                initTrendingSlider();
+            }
+            const picker = document.getElementById('reactionPicker-' + id);
+            if (picker) picker.classList.remove('show');
+        }
+
+        function addComment(id, type) {
+            const prefix = type === 'video' ? 'v' : '';
+            const authorInput = document.getElementById(`${prefix}commentAuthor-${id}`);
+            const textInput = document.getElementById(`${prefix}commentText-${id}`);
+            
+            if (!authorInput || !textInput) return;
+            
+            const author = authorInput.value.trim();
+            const text = textInput.value.trim();
+            if (!author || !text) return showNotification(t('enterNameAndComment'));
+
+            const item = type === 'video' ? videos.find(v => v.id === id) : photos.find(p => p.id === id);
+            if (item) {
+                item.comments.push({ author, text, date: new Date().toLocaleString() });
+                if (db) {
+                    db.ref(`${type}s/${id}`).set(item);
+                } else {
+                    localStorage.setItem(type === 'video' ? 'videos' : 'photos', JSON.stringify(type === 'video' ? videos : photos));
+                    displayPosts();
+                    updateStats();
+                    initTrendingSlider();
+                }
+                authorInput.value = '';
+                textInput.value = '';
+            }
+        }
+
+        function displayPosts() {
+            const gallery = document.getElementById('postsGallery');
+            const allPosts = [...photos.map(p => ({...p, type: 'photo'})), ...videos.map(v => ({...v, type: 'video'}))].sort((a, b) => b.id - a.id);
+            
+            if (allPosts.length === 0) {
+                gallery.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><h3>${t('noPostsYet')}</h3><p>${t('beFirstToPost')}</p></div>`;
+                return;
+            }
+
+            gallery.innerHTML = allPosts.map(post => post.type === 'photo' ? createPhotoCard(post) : createVideoCard(post)).join('');
+        }
+
+        function createPhotoCard(photo) {
+            const reactions = Object.entries(photo.reactions || {}).map(([emoji, count]) => `<span class="reaction-count">${emoji} ${count}</span>`).join('');
+            const comments = (photo.comments || []).map(c => `<div class="comment"><div class="comment-author">${c.author}</div><div class="comment-text">${c.text}</div></div>`).join('');
+            
+            return `<div class="photo-card">
+                <div class="user-info">
+                    <div class="upload-date-only">📅 ${photo.uploadDate}</div>
+                </div>
+                <div class="post-actions">
+                    <button class="post-delete-btn" onclick="deletePost(${photo.id}, 'photo')">🗑️ ${t('deletePost')}</button>
+                </div>
+                <img src="${photo.image}" alt="Photo" onclick="openModal(${photo.id}, 'photo')">
+                <div class="photo-info">
+                    ${photo.caption ? `<p class="photo-caption">${photo.caption}</p>` : ''}
+                    ${reactions ? `<div class="reactions-display">${reactions}</div>` : ''}
+                    <div class="interaction-bar">
+                        <button class="interaction-btn" onclick="toggleLike(${photo.id}, 'photo')">❤️ ${t('like')} ${photo.likes || 0}</button>
+                        <button class="interaction-btn" onclick="showReactionPicker(${photo.id})" style="position: relative;">😊 ${t('react')}<div class="reaction-picker" id="reactionPicker-${photo.id}">${reactionEmojis.map(emoji => `<span class="reaction-emoji" onclick="addReaction(${photo.id}, 'photo', '${emoji}')">${emoji}</span>`).join('')}</div></button>
+                        <button class="interaction-btn" onclick="openModal(${photo.id}, 'photo')" style="margin-left:auto;">🔍 ${t('expandPost')}</button>
+                    </div>
+                    <div class="comments-section">
+                        <strong>💬 ${t('comments')} (${(photo.comments || []).length})</strong>
+                        ${comments}
+                        <div class="comment-form">
+                            <input type="text" class="comment-input" id="commentAuthor-${photo.id}" placeholder="${t('yourName')}">
+                            <input type="text" class="comment-input" id="commentText-${photo.id}" placeholder="${t('writeComment')}">
+                            <button class="comment-btn" onclick="addComment(${photo.id}, 'photo')">${t('send')}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function createVideoCard(video) {
+            const reactions = Object.entries(video.reactions || {}).map(([emoji, count]) => `<span class="reaction-count">${emoji} ${count}</span>`).join('');
+            const comments = (video.comments || []).map(c => `<div class="comment"><div class="comment-author">${c.author}</div><div class="comment-text">${c.text}</div></div>`).join('');
+            
+            return `<div class="video-card">
+                <div class="user-info">
+                    <div class="upload-date-only">📅 ${video.uploadDate}</div>
+                </div>
+                <div class="post-actions">
+                    <button class="post-delete-btn" onclick="deletePost(${video.id}, 'video')">🗑️ ${t('deletePost')}</button>
+                </div>
+                <video controls><source src="${video.video}" type="video/mp4"></video>
+                <div class="photo-info">
+                    ${video.caption ? `<p class="photo-caption">${video.caption}</p>` : ''}
+                    ${reactions ? `<div class="reactions-display">${reactions}</div>` : ''}
+                    <div class="interaction-bar">
+                        <button class="interaction-btn" onclick="toggleLike(${video.id}, 'video')">❤️ ${t('like')} ${video.likes || 0}</button>
+                        <button class="interaction-btn" onclick="showReactionPicker(${video.id})" style="position: relative;">😊 ${t('react')}<div class="reaction-picker" id="reactionPicker-${video.id}">${reactionEmojis.map(emoji => `<span class="reaction-emoji" onclick="addReaction(${video.id}, 'video', '${emoji}')">${emoji}</span>`).join('')}</div></button>
+                        <button class="interaction-btn" onclick="openModal(${video.id}, 'video')" style="margin-left:auto;">🔍 ${t('expandPost')}</button>
+                    </div>
+                    <div class="comments-section">
+                        <strong>💬 ${t('comments')} (${(video.comments || []).length})</strong>
+                        ${comments}
+                        <div class="comment-form">
+                            <input type="text" class="comment-input" id="vcommentAuthor-${video.id}" placeholder="${t('yourName')}">
+                            <input type="text" class="comment-input" id="vcommentText-${video.id}" placeholder="${t('writeComment')}">
+                            <button class="comment-btn" onclick="addComment(${video.id}, 'video')">${t('send')}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function deletePost(id, type) {
+            if (!confirm(t('confirmDeletePost'))) return;
+            if (db) {
+                db.ref(`${type}s/${id}`).remove().then(() => {
+                    showNotification(t('postDeleted'));
+                });
+            } else {
+                if (type === 'photo') {
+                    photos = photos.filter(p => p.id !== id);
+                    localStorage.setItem('photos', JSON.stringify(photos));
+                } else {
+                    videos = videos.filter(v => v.id !== id);
+                    localStorage.setItem('videos', JSON.stringify(videos));
+                }
+                displayPosts();
+                updateStats();
+                initTrendingSlider();
+                showNotification(t('postDeleted'));
+            }
+        }
+
+        function openModal(id, type) {
+            const item = type === 'video' ? videos.find(v => v.id === id) : photos.find(p => p.id === id);
+            if (!item) return;
+
+            const mediaEl = document.getElementById('modalMedia');
+            if (type === 'photo') {
+                mediaEl.innerHTML = `<img src="${item.image}" alt="Photo">`;
+            } else {
+                mediaEl.innerHTML = `<video controls autoplay><source src="${item.video}" type="video/mp4"></video>`;
+            }
+
+            const reactions = Object.entries(item.reactions || {}).map(([emoji, count]) => `<span class="reaction-count">${emoji} ${count}</span>`).join('');
+            const comments = (item.comments || []).map(c => `<div class="comment"><div class="comment-author">${c.author}</div><div class="comment-text">${c.text}</div></div>`).join('');
+            const prefix = type === 'video' ? 'modal-v' : 'modal-';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div style="font-size:12px; color: var(--text-muted); margin-bottom:10px;">📅 ${item.uploadDate}</div>
+                ${item.caption ? `<p class="photo-caption">${item.caption}</p>` : ''}
+                ${reactions ? `<div class="reactions-display">${reactions}</div>` : ''}
+                <div class="interaction-bar">
+                    <button class="interaction-btn" onclick="modalToggleLike(${id}, '${type}')">❤️ ${t('like')} ${item.likes || 0}</button>
+                    <button class="interaction-btn" onclick="modalShowReactionPicker(${id}, '${type}')" style="position:relative;">😊 ${t('react')}
+                        <div class="reaction-picker" id="modalReactionPicker-${id}">${reactionEmojis.map(emoji => `<span class="reaction-emoji" onclick="modalAddReaction(${id}, '${type}', '${emoji}')">${emoji}</span>`).join('')}</div>
+                    </button>
+                </div>
+                <div class="comments-section">
+                    <strong>💬 ${t('comments')} (${(item.comments || []).length})</strong>
+                    <div id="modalCommentsList">${comments}</div>
+                    <div class="comment-form">
+                        <input type="text" class="comment-input" id="${prefix}commentAuthor-${id}" placeholder="${t('yourName')}">
+                        <input type="text" class="comment-input" id="${prefix}commentText-${id}" placeholder="${t('writeComment')}">
+                        <button class="comment-btn" onclick="modalAddComment(${id}, '${type}')">${t('send')}</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+            const v = document.querySelector('.modal-box video');
+            if (v) v.pause();
+        }
+
+        function closeModalOutside(e) {
+            if (e.target === document.getElementById('modalOverlay')) closeModal();
+        }
+
+        function modalToggleLike(id, type) {
+            toggleLike(id, type);
+            setTimeout(() => { closeModal(); openModal(id, type); }, 200);
+        }
+
+        function modalShowReactionPicker(id, type) {
+            const picker = document.getElementById('modalReactionPicker-' + id);
+            if (picker) picker.classList.toggle('show');
+        }
+
+        function modalAddReaction(id, type, emoji) {
+            addReaction(id, type, emoji);
+            setTimeout(() => { closeModal(); openModal(id, type); }, 200);
+        }
+
+        function modalAddComment(id, type) {
+            const prefix = type === 'video' ? 'modal-v' : 'modal-';
+            const authorInput = document.getElementById(`${prefix}commentAuthor-${id}`);
+            const textInput = document.getElementById(`${prefix}commentText-${id}`);
+            if (!authorInput || !textInput) return;
+
+            const author = authorInput.value.trim();
+            const text = textInput.value.trim();
+            if (!author || !text) return showNotification(t('enterNameAndComment'));
+
+            const item = type === 'video' ? videos.find(v => v.id === id) : photos.find(p => p.id === id);
+            if (item) {
+                item.comments.push({ author, text, date: new Date().toLocaleString() });
+                if (db) {
+                    db.ref(`${type}s/${id}`).set(item);
+                } else {
+                    localStorage.setItem(type === 'video' ? 'videos' : 'photos', JSON.stringify(type === 'video' ? videos : photos));
+                    displayPosts();
+                    updateStats();
+                }
+                setTimeout(() => { closeModal(); openModal(id, type); }, 150);
+            }
+        }
+
+        function addEvent() {
+            const titleInput = document.getElementById('eventTitle');
+            const timeInput = document.getElementById('eventTime');
+            const descInput = document.getElementById('eventDescription');
+            
+            const title = titleInput.value.trim();
+            const time = timeInput.value;
+            const description = descInput.value.trim();
+            
+            if (!title || !time) {
+                showNotification(t('enterEventDetails'));
+                return;
+            }
+
+            const newEvent = {
+                id: Date.now(),
+                title: title,
+                time: new Date(time).toLocaleString(),
+                description: description,
+                createdDate: new Date().toLocaleString()
+            };
+
+            if (db) {
+                db.ref('events/' + newEvent.id).set(newEvent).then(() => {
+                    showNotification(t('eventAdded'));
+                    titleInput.value = '';
+                    timeInput.value = '';
+                    descInput.value = '';
+                }).catch(err => console.error(err));
+            } else {
+                events.push(newEvent);
+                localStorage.setItem('events', JSON.stringify(events));
+                showNotification(t('eventAdded'));
+                displayEvents();
+                initEventSlider();
+                updateStats();
+                titleInput.value = '';
+                timeInput.value = '';
+                descInput.value = '';
+            }
+        }
+
+        function displayEvents() {
+            const display = document.getElementById('eventsList');
+            if (events.length === 0) {
+                display.innerHTML = `<div class="empty-state"><h3>${t('noEventsYet')}</h3><p>${t('beFirstToAddEvent')}</p></div>`;
+                return;
+            }
+            display.innerHTML = events.map(e => `<div class="event-card">
+                <div class="event-title">🎊 ${e.title}</div>
+                <div class="event-time">⏰ ${e.time}</div>
+                ${e.description ? `<div class="event-description">${e.description}</div>` : ''}
+                <div style="margin-top: 12px; color: var(--text-muted); font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>${t('added')}: ${e.createdDate}</span>
+                    <button class="delete-btn" onclick="deleteEvent(${e.id})">${t('delete')}</button>
+                </div>
+            </div>`).join('');
+        }
+
+        function deleteEvent(id) {
+            if (!confirm(t('confirmDeleteEvent'))) return;
+            if (db) {
+                db.ref('events/' + id).remove().then(() => {
+                    showNotification(t('eventDeleted'));
+                });
+            } else {
+                events = events.filter(e => e.id !== id);
+                localStorage.setItem('events', JSON.stringify(events));
+                displayEvents();
+                initEventSlider();
+                updateStats();
+                showNotification(t('eventDeleted'));
+            }
+        }
+
+        function initEventSlider() {
+            const slider = document.getElementById('eventSlider');
+            
+            if (events.length === 0) {
+                slider.innerHTML = `<div class="event-item">${t('noUpcomingEvents')}</div>`;
+                return;
+            }
+            
+            const eventItems = events.map(e => 
+                `<div class="event-item">🎊 ${e.title} - ⏰ ${e.time}</div>`
+            ).join('');
+            
+            slider.innerHTML = eventItems + eventItems + eventItems;
+        }
+
+        function initTrendingSlider() {
+            const slider = document.getElementById('trendingSlider');
+            const allPosts = [...photos.map(p => ({...p, type: 'photo'})), ...videos.map(v => ({...v, type: 'video'}))];
+            
+            if (allPosts.length === 0) {
+                slider.innerHTML = `<div class="trending-item">📱 ${currentLanguage === 'bn' ? 'এখনও কোনো পোস্ট নেই' : 'No posts yet'}</div>`;
+                return;
+            }
+            
+            const postsWithScore = allPosts.map(post => {
+                const totalReactions = Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0);
+                const score = (post.likes || 0) + totalReactions + (post.comments?.length || 0) * 2;
+                return { ...post, score };
+            });
+            
+            const trending = [...postsWithScore].sort((a, b) => b.score - a.score).slice(0, 5);
+            const recent = [...postsWithScore].sort((a, b) => b.id - a.id).slice(0, 5);
+            
+            const featured = [...trending, ...recent].filter((post, index, self) => 
+                index === self.findIndex(p => p.id === post.id)
+            );
+            
+            const trendingItems = featured.map(post => {
+                const icon = post.type === 'photo' ? '📸' : '🎬';
+                const reactions = Object.values(post.reactions || {}).reduce((sum, count) => sum + count, 0);
+                const caption = post.caption ? post.caption.substring(0, 35) + '...' : (currentLanguage === 'bn' ? 'পোস্ট' : 'Post');
+                const stats = `❤️ ${post.likes || 0} • 😊 ${reactions} • 💬 ${post.comments?.length || 0}`;
+                
+                const thumbnailSrc = post.type === 'photo' ? post.image : (post.video || '');
+                const thumbnailTag = thumbnailSrc ? `<img src="${thumbnailSrc}" class="trending-thumbnail" alt="Post">` : icon;
+                
+                return `<div class="trending-item">${thumbnailTag} <span>${caption} - ${stats}</span></div>`;
+            }).join('');
+            
+            slider.innerHTML = trendingItems + trendingItems + trendingItems;
+        }
+
+        function updateStats() {
+            const totalComments = photos.reduce((sum, p) => sum + (p.comments || []).length, 0) + videos.reduce((sum, v) => sum + (v.comments || []).length, 0);
+            const totalLikes = photos.reduce((sum, p) => sum + (p.likes || 0), 0) + videos.reduce((sum, v) => sum + (v.likes || 0), 0);
+            document.getElementById('totalPhotos').textContent = photos.length;
+            document.getElementById('totalVideos').textContent = videos.length;
+            document.getElementById('totalComments').textContent = totalComments;
+            document.getElementById('totalLikes').textContent = totalLikes;
+        }
+
+        function initFirebaseListeners() {
+            if (!db) {
+                console.log('Using localStorage mode');
+                return;
+            }
+            
+            db.ref('photos').on('value', (snapshot) => {
+                photos = snapshot.val() ? Object.values(snapshot.val()) : [];
+                updateStats();
+                initTrendingSlider();
+                displayPosts();
+            });
+
+            db.ref('videos').on('value', (snapshot) => {
+                videos = snapshot.val() ? Object.values(snapshot.val()) : [];
+                updateStats();
+                initTrendingSlider();
+                displayPosts();
+            });
+
+            db.ref('events').on('value', (snapshot) => {
+                events = snapshot.val() ? Object.values(snapshot.val()) : [];
+                updateStats();
+                initEventSlider();
+                displayEvents();
+            });
+            
+            console.log('✅ Firebase real-time sync active');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentLanguage === 'bn') changeLanguage('bn');
+            if (!db) {
+                photos = JSON.parse(localStorage.getItem('photos')) || [];
+                videos = JSON.parse(localStorage.getItem('videos')) || [];
+                events = JSON.parse(localStorage.getItem('events')) || [];
+            }
+            initFirebaseListeners();
+            initEventSlider();
+            initTrendingSlider();
+            updateStats();
+            console.log('🚀 App initialized');
+        });
+
+        // Prevent zoom on double tap (iOS Safari)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
